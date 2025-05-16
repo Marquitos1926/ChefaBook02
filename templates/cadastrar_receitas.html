@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Receita</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='uploads/styles.css') }}">
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="{{ url_for('dashboard') }}">Home</a>
+        <a href="{{ url_for('cadastrar_receita') }}">Nova Receita</a>
+        <a href="{{ url_for('visualizar_receitas') }}">Ver Receitas</a>
+        <a href="{{ url_for('home') }}">Voltar ao Início</a>
+        <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
+    </nav>
+
+    <!-- Container principal -->
+    <div class="container">
+        <h2>Cadastrar Nova Receita</h2>
+
+        <!-- Formulário de cadastro -->
+        <form method="POST" action="/cadastrar_receita" enctype="multipart/form-data">
+            <input type="text" name="titulo" placeholder="Título da Receita" required>
+            <input type="text" name="categoria" placeholder="Categoria" required>
+            <textarea name="ingredientes" placeholder="Ingredientes" required></textarea>
+            <textarea name="preparo" placeholder="Modo de Preparo" required></textarea>
+            <label for="imagem">Selecione uma imagem:</label>
+            <input type="file" name="imagem" accept="image/*" required><br>
+            <button type="submit">Cadastrar Receita</button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,27 @@
+# 📦 Dependências Principais
+Flask==2.3.2
+pymongo==4.5.0
+bcrypt==4.0.1
+python-dotenv==1.0.0
+Werkzeug==2.3.7
+Jinja2==3.1.2
+
+# 🖼️ Manipulação de Imagens
+Pillow==10.0.1
+
+# 🔒 Segurança
+Flask-Talisman==1.0.0
+
+# 🧪 Testes (opcional)
+pytest==7.4.0
+pytest-cov==4.1.0
+
+# 🚀 Deploy (opcional)
+gunicorn==21.2.0
+whitenoise==6.5.0
+
+# 📡 GridFS para MongoDB
+gridfs==0.5.0
+
+# 🔄 Requisitos para Upload de Arquivos
+flask-uploads==0.2.1

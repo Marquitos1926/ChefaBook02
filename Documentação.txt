@@ -1,0 +1,298 @@
+-------------------------------------------------------------------------------------Introdução------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Este projeto consiste no desenvolvimento de um site para armazenamento e gerenciamento de receitas culinárias, utilizando Python e Flask. 
+O sistema permite cadastro e login de usuários, adição, edição e exclusão de receitas, upload de imagens, além de um painel administrativo para gestão dos usuários e receitas.
+
+Tecnologias Utilizadas
+
+Backend: Python (Flask)
+
+Banco de Dados: SQLite
+
+Frontend: HTML, CSS (cores padrão: Verde-escuro, Bege-claro e Laranja-suave)
+
+Segurança: Hash de senhas com bcrypt
+
+Autenticação: Sessão Flask
+
+Upload de Imagens: Flask e armazenamento local
+
+
+
+-----------------------------Estrutura do Projeto--------------------------------
+
+1. Configuração Inicial
+
+O projeto é iniciado com Flask, utilizando um template_folder para armazenar os templates HTML. A chave secreta do Flask é definida via variável de ambiente para maior segurança.
+
+app = Flask(__name__, template_folder='templates')
+app.secret_key = os.environ.get('SECRET_KEY') or 'dev-key-not-secure'
+
+2. Configuração do Banco de Dados
+
+O banco de dados utilizado é o SQLite. A função conectar_db() cria conexão com o banco e usa row_factory para permitir a manipulação dos resultados como dicionários.
+
+A função criar_tabelas() cria automaticamente as tabelas usuarios e receitas, garantindo que o sistema possa armazenar os dados corretamente.
+
+def criar_tabelas():
+    with conectar_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                nome TEXT NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                telefone TEXT,
+                senha TEXT NOT NULL,
+                admin INTEGER DEFAULT 0
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS receitas (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                titulo TEXT NOT NULL,
+                categoria TEXT NOT NULL,
+                ingredientes TEXT NOT NULL,
+                preparo TEXT NOT NULL,
+                imagem BLOB,
+                user_id INTEGER NOT NULL,
+                FOREIGN KEY(user_id) REFERENCES usuarios(id)
+            )
+        ''')
+        conn.commit()
+
+3. Sistema de Autenticação
+
+O sistema permite cadastro e login de usuários, armazenando senhas de forma segura com bcrypt.
+
+Cadastro de Usuário
+
+O sistema valida e-mails e senhas antes do cadastro.
+
+Senhas são armazenadas de forma segura com hash bcrypt.
+
+Login de Usuário
+
+Verifica se o e-mail está cadastrado.
+
+Compara a senha fornecida com o hash armazenado no banco.
+
+Se autenticado, armazena o ID do usuário na sessão.
+
+4. Funcionalidades do Site
+
+Cadastro e Gerenciamento de Receitas
+
+Usuários podem cadastrar receitas informando título, categoria, ingredientes, modo de preparo e imagem.
+
+As receitas podem ser editadas e excluídas pelos próprios criadores.
+
+O site permite visualizar receitas cadastradas, exibindo suas informações e imagens.
+
+Upload e Exibição de Imagens
+
+Apenas imagens nos formatos png, jpg, jpeg e gif são aceitas.
+
+As imagens são armazenadas no banco de dados em formato BLOB.
+
+Caso uma receita não tenha imagem, é exibida uma imagem padrão.
+
+5. Painel Administrativo
+
+Um administrador pode:
+
+Visualizar todos os usuários cadastrados.
+
+Excluir usuários e suas respectivas receitas.
+
+Gerenciar receitas dos usuários.
+
+O login de administrador é separado do login comum e utiliza credenciais pré-definidas:
+
+ADMIN_CREDENTIALS = {
+    "email": "admin@email.com",
+    "password": "senha123"
+}
+
+6. Proteção de Rotas
+
+@login_required: Garante que apenas usuários logados possam acessar determinadas páginas.
+
+@admin_required: Restringe o acesso ao painel administrativo apenas para administradores.
+
+7. Execução do Projeto
+
+Antes de rodar a aplicação, é necessário garantir que o banco de dados e as pastas de upload existam. Isso é feito antes de iniciar o servidor Flask.
+
+if __name__ == '__main__':
+    if not os.path.exists(app.config['UPLOAD_FOLDER']):
+        os.makedirs(app.config['UPLOAD_FOLDER'])
+    
+    criar_tabelas()
+    verificar_coluna_imagem()
+    app.run(debug=True)
+
+
+
+
+
+------------------------------------Testes-------------------------------------
+
+1. Testes de Usuários
+-Objetivo: Verificar o cadastro, login e funcionalidades básicas de usuários.
+
+1.1 Cadastro de Usuário
+Teste: Cadastro com dados válidos
+Verifica:
+-Se o usuário é criado corretamente
+-Se redireciona para a página correta
+-Se os dados são salvos no banco de dados
+
+Teste: Cadastro com e-mail já existente
+Verifica:
+-Se o sistema impede cadastro duplicado
+-Se exibe mensagem de erro adequada
+
+Teste: Cadastro com senhas diferentes
+Verifica:
+-Se o sistema valida a confirmação de senha
+-Se exibe mensagem de erro
+
+1.2 Login e Logout
+Teste: Login com credenciais válidas
+Verifica:
+-Se a sessão é criada corretamente (user_id, user_nome)
+-Se redireciona para a página correta
+
+Teste: Login com senha incorreta
+Verifica:
+-Se a sessão não é criada
+-Se exibe mensagem de erro
+
+Teste: Login com usuário inexistente
+Verifica:
+-Se o sistema rejeita login de e-mail não cadastrado
+
+Teste: Logout
+Verifica:
+-Se a sessão é destruída corretamente
+-Se redireciona para a página inicial
+
+
+--------------------------------------------------------------------------------
+2. Testes de Receitas
+Objetivo: Garantir que o CRUD de receitas funcione corretamente.
+
+2.1 Cadastro de Receitas
+Teste: Cadastro com dados válidos (incluindo imagem)
+Verifica:
+-Se a receita é salva no banco de dados
+-Se exibe mensagem de sucesso
+
+Teste: Cadastro sem imagem (opcional)
+Verifica:
+-Se o sistema aceita receitas sem imagem
+
+
+2.2 Edição de Receitas
+Teste: Edição de receita existente
+Verifica:
+-Se os dados são atualizados no banco
+-Se exibe mensagem de sucesso
+
+
+2.3 Exclusão de Receitas
+Teste: Exclusão de receita
+Verifica:
+-Se a receita é removida do banco
+-Se exibe mensagem de confirmação
+
+
+2.4 Visualização de Receitas
+Teste: Listagem de receitas
+Verifica:
+-Se todas as receitas são exibidas corretamente
+
+Teste: Detalhes de uma receita
+Verifica:
+-Se o título, ingredientes e modo de preparo são exibidos
+
+
+
+--------------------------------------------------------------------------------
+3. Testes de Administração
+Objetivo: Garantir que o painel administrativo funcione corretamente.
+
+3.1 Login do Administrador
+Teste: Login com credenciais válidas
+Verifica:
+-Se a sessão admin é criada (user_admin=True)
+
+Teste: Login com credenciais inválidas
+Verifica:
+-Se o acesso é negado
+
+3.2 Painel de Administração
+Teste: Acesso sem permissão de admin
+Verifica:
+-Se usuários normais são bloqueados
+
+Teste: Listagem de usuários
+Verifica:
+-Se todos os usuários são exibidos corretamente
+
+3.3 Exclusão de Usuários (por admin)
+Teste: Exclusão de usuário
+Verifica:
+-Se o usuário e suas receitas são removidos
+-Se exibe mensagem de confirmação
+
+
+
+--------------------------------------------------------------------------------
+4. Testes de Segurança e Autorização
+Objetivo: Garantir que usuários não acessem recursos sem permissão.
+
+4.1 Rotas Protegidas
+Teste: Acesso sem login
+Verifica:
+-Se o sistema redireciona para o login
+
+Teste: Edição de receita de outro usuário
+Verifica:
+-Se o sistema bloqueia a ação
+
+Teste: Exclusão de receita de outro usuário
+Verifica:
+-Se o sistema impede a exclusão
+
+4.2 Página Não Encontrada
+Teste: Acesso a rota inexistente
+Verifica:
+-Se retorna erro 404
+-Se exibe mensagem amigável
+
+
+
+
+
+
+
+
+Resumo dos Testes:
+- Testes de Usuários: Cadastro, login, logout
+- Testes de Receitas: CRUD completo + visualização
+- Testes de Admin: Login, painel, exclusão de usuários
+- Testes de Segurança: Rotas protegidas, autorização
+
+
+
+
+
+
+
+------------------------------------Conclusão-------------------------------------
+
+Este projeto fornece um sistema funcional de armazenamento e gerenciamento de receitas com autenticação, upload de imagens e painel administrativo.
+Ele pode ser expandido para incluir novas funcionalidades, como busca avançada de receitas, avaliações e comentários.

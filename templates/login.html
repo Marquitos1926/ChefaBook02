@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='uploads/styles.css') }}">
+    <!-- SweetAlert para pop-ups bonitos -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .flash-messages {
+            display: none; /* Vamos esconder as mensagens padrão */
+        }
+        .container {
+            max-width: 400px;
+            margin: 50px auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .botao-adm {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Login</h2>
+    <p>Bem-vindo de volta! Faça login para acessar sua conta.</p>
+
+    <!-- Div oculta para capturar mensagens do Flask -->
+    <div class="flash-messages">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert-data" data-category="{{ category }}" data-message="{{ message }}"></div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <form method="POST" action="{{ url_for('login') }}" id="loginForm">
+        <input type="email" name="email" placeholder="Digite seu e-mail" required
+               value="{{ request.form.email if request.form.email else '' }}">
+        <input type="password" name="senha" placeholder="Digite sua senha" required>
+        <button type="submit">Entrar</button>
+    </form>
+
+    <p>Não tem uma conta? <a href="{{ url_for('cadastrar_usuario') }}">Cadastre-se aqui</a>.</p>
+    <a href="{{ url_for('login_admin') }}" class="botao-adm">Acesso Administrativo</a>
+</div>
+
+<script>
+    // Função para mostrar alertas bonitos
+    function showAlert(category, message) {
+        const title = category === 'error' ? 'Erro!' : 'Sucesso!';
+        const icon = category === 'error' ? 'error' : 'success';
+        
+        Swal.fire({
+            title: title,
+            text: message,
+            icon: icon,
+            confirmButtonText: 'OK'
+        }).then((result) => {
+            // Redirecionar após alerta de sucesso
+            if (category === 'success') {
+                window.location.href = "{{ url_for('dashboard') }}";
+            }
+        });
+    }
+
+    // Capturar mensagens do Flask ao carregar a página
+    document.addEventListener('DOMContentLoaded', function() {
+        const alerts = document.querySelectorAll('.alert-data');
+        
+        alerts.forEach(alert => {
+            const category = alert.getAttribute('data-category');
+            const message = alert.getAttribute('data-message');
+            
+            if (category && message) {
+                showAlert(category, message);
+            }
+        });
+    });
+
+    // Validação básica antes do envio
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+        const email = document.querySelector('input[name="email"]').value.trim();
+        const senha = document.querySelector('input[name="senha"]').value.trim();
+        
+        if (!email || !email.includes('@')) {
+            e.preventDefault();
+            showAlert('error', 'Por favor, insira um e-mail válido');
+            return false;
+        }
+        
+        if (!senha) {
+            e.preventDefault();
+            showAlert('error', 'Por favor, insira sua senha');
+            return false;
+        }
+        
+        return true;
+    });
+</script>
+
+</body>
+</html>

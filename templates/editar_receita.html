@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar Receita</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='uploads/styles.css') }}">
+</head>
+<body>
+    <!-- Navbar (se aplicável) -->
+    {% if 'user_id' in session %}
+    <div class="navbar">
+        <a href="{{ url_for('dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('visualizar_receitas') }}">Minhas Receitas</a>
+        <a href="{{ url_for('cadastrar_receita') }}">Nova Receita</a>
+        <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
+    </div>
+    {% endif %}
+
+    <div class="container">
+        <h2>Editar Receita</h2>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <form method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="titulo">Título:</label>
+                <input type="text" id="titulo" name="titulo" value="{{ receita.titulo }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="categoria">Categoria:</label>
+                <select id="categoria" name="categoria" required>
+                    <option value="">Selecione uma categoria</option>
+                    <option value="Entrada" {% if receita.categoria == 'Entrada' %}selected{% endif %}>Entrada</option>
+                    <option value="Prato Principal" {% if receita.categoria == 'Prato Principal' %}selected{% endif %}>Prato Principal</option>
+                    <option value="Sobremesa" {% if receita.categoria == 'Sobremesa' %}selected{% endif %}>Sobremesa</option>
+                    <option value="Bebida" {% if receita.categoria == 'Bebida' %}selected{% endif %}>Bebida</option>
+                    <option value="Lanche" {% if receita.categoria == 'Lanche' %}selected{% endif %}>Lanche</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="ingredientes">Ingredientes:</label>
+                <textarea id="ingredientes" name="ingredientes" required>{{ receita.ingredientes }}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="preparo">Modo de Preparo:</label>
+                <textarea id="preparo" name="preparo" required>{{ receita.preparo }}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="imagem">Imagem da Receita:</label>
+                {% if receita.tem_imagem %}
+                    <p>Imagem atual:</p>
+                    <img src="{{ url_for('imagem_receita', receita_id=receita.id) }}" class="imagem-atual" alt="Imagem atual da receita">
+                {% endif %}
+                <input type="file" id="imagem" name="imagem" accept="image/*">
+            </div>
+            
+            <div class="actions">
+                <button type="submit">Salvar Alterações</button>
+                <a href="{{ url_for('visualizar_receitas') }}" class="btn-voltar">Cancelar</a>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastrar Usuário</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='uploads/styles.css') }}">
+    <!-- SweetAlert2 para pop-ups bonitos -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        .flash-messages {
+            display: none; /* Escondemos as mensagens padrão do Flask */
+        }
+        .is-invalid {
+            border-color: #dc3545 !important;
+        }
+        .invalid-feedback {
+            color: #dc3545;
+            font-size: 0.875em;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Cadastrar Usuário</h2>
+        
+        <!-- Div oculta para capturar mensagens do Flask -->
+        <div class="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert-data" data-category="{{ category }}" data-message="{{ message }}"></div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <form method="POST" action="{{ url_for('cadastrar_usuario') }}" novalidate id="cadastroForm">
+            <div class="form-group">
+                <label for="nome">Nome Completo*</label>
+                <input type="text" id="nome" name="nome" class="form-control" required
+                       value="{{ request.form.nome if request.form.nome else '' }}">
+                <div class="invalid-feedback" id="nome-error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">E-mail*</label>
+                <input type="email" id="email" name="email" class="form-control" required
+                       value="{{ request.form.email if request.form.email else '' }}">
+                <div class="invalid-feedback" id="email-error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="telefone">Telefone*</label>
+                <input type="text" id="telefone" name="telefone" class="form-control" required
+                       value="{{ request.form.telefone if request.form.telefone else '' }}"
+                       placeholder="(00) 00000-0000">
+                <div class="invalid-feedback" id="telefone-error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="senha">Senha (mínimo 6 caracteres)*</label>
+                <input type="password" id="senha" name="senha" class="form-control" required>
+                <div class="invalid-feedback" id="senha-error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmar_senha">Confirmar Senha*</label>
+                <input type="password" id="confirmar_senha" name="confirmar_senha" class="form-control" required>
+                <div class="invalid-feedback" id="confirmar_senha-error"></div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Cadastrar</button>
+            
+            <div class="mt-3">
+                Já tem uma conta? <a href="{{ url_for('login') }}">Faça login aqui</a>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Função para mostrar pop-up de erro/sucesso
+        function showAlert(category, message) {
+            const title = category === 'error' ? 'Erro!' : category === 'success' ? 'Sucesso!' : 'Aviso!';
+            const icon = category === 'error' ? 'error' : category === 'success' ? 'success' : 'warning';
+            
+            Swal.fire({
+                title: title,
+                text: message,
+                icon: icon,
+                confirmButtonText: 'OK'
+            });
+        }
+
+        // Capturar mensagens do Flask e exibir como pop-up
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert-data');
+            
+            alerts.forEach(alert => {
+                const category = alert.getAttribute('data-category');
+                const message = alert.getAttribute('data-message');
+                
+                if (category && message) {
+                    showAlert(category, message);
+                    
+                    // Destacar campos com erro
+                    if (message.includes('nome')) {
+                        highlightError('nome', message);
+                    } else if (message.includes('e-mail') || message.includes('email')) {
+                        highlightError('email', message);
+                    } else if (message.includes('Telefone') || message.includes('telefone')) {
+                        highlightError('telefone', message);
+                    } else if (message.includes('senha')) {
+                        if (message.includes('coincidem') || message.includes('confirmar')) {
+                            highlightError('confirmar_senha', message);
+                        } else {
+                            highlightError('senha', message);
+                        }
+                    }
+                }
+            });
+        });
+
+        // Função para destacar campos com erro
+        function highlightError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            const errorElement = document.getElementById(`${fieldId}-error`);
+            
+            if (field && errorElement) {
+                field.classList.add('is-invalid');
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+        }
+
+        // Validação do formulário antes do envio
+        document.getElementById('cadastroForm').addEventListener('submit', function(event) {
+            let isValid = true;
+            
+            // Limpar erros anteriores
+            document.querySelectorAll('.is-invalid').forEach(el => {
+                el.classList.remove('is-invalid');
+            });
+            document.querySelectorAll('.invalid-feedback').forEach(el => {
+                el.style.display = 'none';
+            });
+            
+            // Validação do Nome
+            const nome = document.getElementById('nome').value.trim();
+            if (!nome) {
+                highlightError('nome', 'O nome é obrigatório');
+                isValid = false;
+            }
+            
+            // Validação do Email
+            const email = document.getElementById('email').value.trim();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!email) {
+                highlightError('email', 'O e-mail é obrigatório');
+                isValid = false;
+            } else if (!emailRegex.test(email)) {
+                highlightError('email', 'Por favor, insira um e-mail válido');
+                isValid = false;
+            }
+            
+            // Validação do Telefone
+            const telefone = document.getElementById('telefone').value.trim();
+            const telefoneLimpo = telefone.replace(/\D/g, '');
+            if (!telefone) {
+                highlightError('telefone', 'O telefone é obrigatório');
+                isValid = false;
+            } else if (telefoneLimpo.length < 10 || telefoneLimpo.length > 11) {
+                highlightError('telefone', 'Telefone inválido. Insira DDD + número (10 ou 11 dígitos)');
+                isValid = false;
+            }
+            
+            // Validação da Senha (apenas tamanho mínimo)
+            const senha = document.getElementById('senha').value;
+            if (!senha) {
+                highlightError('senha', 'A senha é obrigatória');
+                isValid = false;
+            } else if (senha.length < 6) {
+                highlightError('senha', 'A senha deve ter pelo menos 6 caracteres');
+                isValid = false;
+            }
+            
+            // Validação de Confirmação de Senha
+            const confirmarSenha = document.getElementById('confirmar_senha').value;
+            if (!confirmarSenha) {
+                highlightError('confirmar_senha', 'Confirme sua senha');
+                isValid = false;
+            } else if (senha !== confirmarSenha) {
+                highlightError('confirmar_senha', 'As senhas não coincidem');
+                isValid = false;
+            }
+            
+            if (!isValid) {
+                event.preventDefault();
+                showAlert('error', 'Por favor, corrija os erros no formulário');
+            }
+        });
+
+        // Máscara para telefone
+        document.getElementById('telefone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.substring(0, 11);
+            
+            if (value.length > 2) {
+                value = `(${value.substring(0,2)}) ${value.substring(2)}`;
+            }
+            if (value.length > 10) {
+                value = `${value.substring(0,10)}-${value.substring(10)}`;
+            }
+            
+            e.target.value = value;
+        });
+    </script>
+</body>
+</html>

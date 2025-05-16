@@ -1,0 +1,1033 @@
+/* Configuração do background */
+body {
+    background-color: #F5E1C8; /* Bege-claro */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+/* Estilização do container */
+.container {
+    background-color: #2E7D32; /* Verde-escuro */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    color: white;
+    width: 350px;
+}
+
+/* Inputs e botões */
+input, button {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+}
+
+input {
+    background-color: #F5E1C8; /* Bege-claro */
+}
+
+button {
+    background-color: #FFA726; /* Laranja-suave */
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #e68a00;
+}
+
+/* Estilos para os botões secundários */
+.cadastro-btn, .login-btn, .logout-btn {
+    background-color: #FFA726;
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    cursor: pointer;
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+
+.cadastro-btn:hover, .login-btn:hover, .logout-btn:hover {
+    background-color: #e68a00;
+}
+
+/* Mensagem de erro */
+.erro {
+    color: red;
+    margin-top: 10px;
+}
+
+
+
+
+.botao-adm {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: #2E7D32; /* Verde-escuro */
+    color: white;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: bold;
+}
+
+.botao-adm:hover {
+    background-color: #1b5e20; /* Verde mais escuro ao passar o mouse */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #F5E1C8; /* Bege-claro */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+/* Estilização do container de login */
+.login-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    text-align: center;
+}
+
+.login-container h2 {
+    margin-bottom: 20px;
+}
+
+.login-container input {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.login-container button {
+    width: 100%;
+    padding: 10px;
+    background-color: #2E7D32; /* Verde-escuro */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.login-container button:hover {
+    background-color: #1b5e20;
+}
+
+/* Estilização do botão de Admin no canto superior direito */
+.botao-adm {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    padding: 10px 20px;
+    background-color: #FFA726; /* Laranja-suave */
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+.botao-adm:hover {
+    background-color: #e6951d; /* Tom mais escuro ao passar o mouse */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*comfigurações e estilos para a navv bar*/
+
+/* Estilos para o Navbar */
+.navbar {
+    background-color: #2E7D32; /* Verde-escuro */
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-around; /* Espaçamento entre os links */
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra */
+    position: fixed; /* Fixo no topo */
+    top: 0;
+    width: 100%; /* Ocupa toda a largura */
+    z-index: 1000; /* Certifica que fica acima de outros elementos */
+}
+
+.navbar a {
+    color: white; /* Texto branco */
+    text-decoration: none; /* Remove sublinhado */
+    font-weight: bold; /* Destaca o texto */
+    padding: 10px 15px; /* Espaçamento interno */
+    border-radius: 5px; /* Bordas arredondadas */
+    transition: background-color 0.3s ease; /* Animação ao passar o mouse */
+}
+
+.navbar a:hover {
+    background-color: #1b5e20; /* Verde mais escuro ao passar o mouse */
+}
+
+/* Estilo para o link de logout */
+.navbar .logout-link {
+    background-color: #FFA726; /* Laranja */
+    color: #ffffff; /* Texto branco */
+}
+
+.navbar .logout-link:hover {
+    background-color: #e6951d; /* Laranja mais escuro */
+}
+
+/* Adicione margens ao restante da página para evitar sobreposição */
+.container {
+    margin-top: 70px; /* Ajusta para compensar o navbar fixo */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*Parte do login do administrador*/
+
+/* Estilização do body */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #F5E1C8; /* Fundo bege claro */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Altura total da tela */
+}
+
+/* Estilização do container */
+.container {
+    text-align: center; /* Centraliza texto e botões */
+    background-color: #FFF; /* Fundo branco */
+    padding: 40px;
+    border-radius: 15px; /* Cantos arredondados */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Sombra para destaque */
+    width: 320px; /* Largura fixa */
+}
+
+/* Título principal */
+.container h2 {
+    color: #2E7D32; /* Verde escuro */
+    margin-bottom: 15px;
+}
+
+/* Parágrafo descritivo */
+.container p {
+    color: #666; /* Cinza suave */
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+/* Botão estilizado */
+.container a button {
+    background-color: #FFA726; /* Laranja suave */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease; /* Animação ao passar o mouse */
+}
+
+.container a button:hover {
+    background-color: #e6951d; /* Tom de laranja mais escuro */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Estilização geral para o navbar */
+.navbar {
+    background-color: #2E7D32; /* Verde-escuro */
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-around; /* Espaçamento uniforme entre os links */
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra */
+    position: fixed;
+    top: 0;
+    width: 100%; /* Ocupa toda a largura */
+    z-index: 1000;
+}
+
+.navbar a {
+    color: white; /* Texto branco */
+    text-decoration: none; /* Remove sublinhado */
+    font-weight: bold;
+    padding: 10px 15px; /* Espaçamento */
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.navbar a:hover {
+    background-color: #1b5e20; /* Verde mais escuro no hover */
+}
+
+.logout-link {
+    background-color: #FFA726; /* Laranja */
+    padding: 10px 15px;
+}
+
+.logout-link:hover {
+    background-color: #e6951d; /* Laranja mais escuro no hover */
+}
+
+/* Estilização do container */
+.container {
+    background-color: #FFF; /* Fundo branco */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    margin: 100px auto; /* Espaçamento superior para compensar navbar fixo */
+    width: 400px;
+    text-align: center;
+}
+
+/* Título do formulário */
+.container h2 {
+    color: #2E7D32; /* Verde escuro */
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+/* Estilo dos inputs e textarea */
+input[type="text"], textarea, input[type="file"] {
+    width: 100%; /* Ocupa toda a largura do container */
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+/* Estilo do botão de submissão */
+button {
+    background-color: #FFA726; /* Laranja */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+button:hover {
+    background-color: #e6951d; /* Laranja mais escuro no hover */
+}
+
+/* Label da imagem */
+.form-label {
+    display: block;
+    margin: 10px 0 5px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: left;
+    color: #666; /* Cinza claro */
+}
+
+/*Issa parte é para fazer o botão sair ficar no canto da tela da parte login_admin*/
+.logout-link {
+    position: absolute; /* Posiciona o botão no canto */
+    top: 20px; /* Espaçamento da parte superior */
+    right: 20px; /* Espaçamento da lateral direita */
+    background-color: #FFA726; /* Cor de fundo laranja */
+    color: white; /* Texto branco */
+    text-decoration: none; /* Remove sublinhado */
+    padding: 10px 15px; /* Espaçamento interno */
+    border-radius: 5px; /* Bordas arredondadas */
+    font-weight: bold; /* Texto em negrito */
+    transition: background-color 0.3s ease; /* Animação para hover */
+}
+
+.logout-link:hover {
+    background-color: #e6951d; /* Tom de laranja mais escuro ao passar o mouse */
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*Essa parte da dando uma mudada no css na parte do adm login*/
+/* Configuração do background */
+body {
+    background-color: #F5E1C8; /* Bege-claro */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+/* Estilização do container principal */
+.container {
+    background-color: #2E7D32; /* Verde escuro */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    color: white;
+    width: 90%; /* Ajusta para 90% da largura da tela em dispositivos menores */
+    max-width: 400px; /* Define uma largura máxima para telas maiores */
+}
+
+/* Inputs e botões */
+input, button {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+}
+
+input {
+    background-color: #F5E1C8; /* Bege-claro */
+}
+
+button {
+    background-color: #FFA726; /* Laranja-suave */
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #e68a00;
+}
+
+/* Botões secundários */
+.cadastro-btn, .login-btn, .logout-btn {
+    background-color: #FFA726;
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    cursor: pointer;
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+
+.cadastro-btn:hover, .login-btn:hover, .logout-btn:hover {
+    background-color: #e68a00;
+}
+
+/* Navbar responsiva */
+.navbar {
+    background-color: #2E7D32; /* Verde-escuro */
+    padding: 10px 20px;
+    display: flex;
+    flex-wrap: wrap; /* Ajusta os itens para quebrar linha em telas pequenas */
+    justify-content: center; /* Alinha ao centro */
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Sombra */
+    position: fixed; /* Fixa no topo */
+    top: 0;
+    width: 100%; /* Ocupa toda a largura */
+    z-index: 1000; /* Certifica que fica acima de outros elementos */
+}
+
+.navbar a {
+    color: white; /* Texto branco */
+    text-decoration: none; /* Remove sublinhado */
+    font-weight: bold; /* Destaca o texto */
+    padding: 10px 15px; /* Espaçamento interno */
+    margin: 5px; /* Espaçamento entre os itens */
+    border-radius: 5px; /* Bordas arredondadas */
+    transition: background-color 0.3s ease; /* Animação ao passar o mouse */
+}
+
+.navbar a:hover {
+    background-color: #1b5e20; /* Verde mais escuro no hover */
+}
+
+.navbar .logout-link {
+    background-color: #FFA726; /* Laranja */
+}
+
+.navbar .logout-link:hover {
+    background-color: #e6951d; /* Laranja mais escuro */
+}
+
+/* Responsividade para dispositivos menores */
+@media (max-width: 600px) {
+    .navbar a {
+        font-size: 14px; /* Texto menor em telas menores */
+        padding: 8px 10px; /* Reduz o espaçamento interno */
+    }
+
+    .container {
+        padding: 20px; /* Reduz o padding em dispositivos menores */
+    }
+
+    button, input {
+        font-size: 14px; /* Reduz o tamanho do texto em botões e inputs */
+        padding: 8px; /* Ajusta o padding em telas menores */
+    }
+}
+
+/* Adicionando responsividade ao formulário de login */
+.login-container {
+    background-color: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 90%; /* Ajusta para 90% da largura da tela em dispositivos menores */
+    max-width: 400px; /* Define uma largura máxima */
+    text-align: center;
+}
+
+.login-container h2 {
+    font-size: 22px; /* Tamanho ajustado para o título */
+    margin-bottom: 20px;
+}
+
+.login-container input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+}
+
+.login-container button {
+    width: 100%;
+    padding: 10px;
+    background-color: #2E7D32; /* Verde escuro */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.login-container button:hover {
+    background-color: #1b5e20; /* Verde mais escuro */
+}
+
+@media (max-width: 600px) {
+    .login-container h2 {
+        font-size: 18px; /* Título menor em telas menores */
+    }
+
+    .login-container input,
+    .login-container button {
+        font-size: 14px; /* Reduz o tamanho do texto em inputs e botões */
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*Css para o conteiner da parte de login que estava com erros*/
+/* Estilo para o contêiner */
+/* Estilo para o contêiner */
+.container {
+    background-color: white; /* Fundo branco */
+    padding: 20px;
+    border-radius: 10px; /* Bordas arredondadas */
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2); /* Sombra */
+    text-align: center; /* Centraliza o texto */
+    width: 90%; /* Ajuste para dispositivos menores */
+    max-width: 400px; /* Largura máxima do contêiner */
+    margin: auto; /* Centraliza horizontalmente */
+    box-sizing: border-box; /* Inclui padding e borda no tamanho total */
+    overflow: hidden; /* Garante que nada "vaze" do contêiner */
+}
+
+/* Estilo do formulário */
+form {
+    width: 100%; /* Certifica que o formulário não ultrapasse o contêiner */
+    margin-top: 20px; /* Espaçamento superior */
+    display: flex;
+    flex-direction: column; /* Organiza os elementos em coluna */
+}
+
+
+
+
+
+
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #F5E1C8;
+    color: #2E7D32;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+}
+
+h2 {
+    color: #2E7D32;
+}
+
+form {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+}
+
+label {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+input {
+    padding: 8px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+button {
+    background-color: #FFA726;
+    color: white;
+    border: none;
+    padding: 10px;
+    margin-top: 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:hover {
+    background-color: #e69520;
+}
+
+.logout-link {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #2E7D32;
+    color: white;
+    padding: 10px 15px;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.logout-link:hover {
+    background-color: #245a27;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Estilos específicos para editar_receita.html */
+
+.imagem-atual {
+    max-width: 200px;
+    max-height: 200px;
+    display: block;
+    margin: 10px 0;
+    border-radius: 5px;
+    border: 2px solid #FFA726;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #2E7D32;
+}
+
+.form-group input[type="text"],
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #F5E1C8;
+}
+
+.form-group textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+.actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.btn-voltar {
+    background-color: #6c757d;
+    color: white;
+    padding: 10px;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 4px;
+}
+
+.btn-voltar:hover {
+    background-color: #5a6268;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Estilos específicos para visualizar_receitas.html */
+
+.table-container {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+}
+
+th, td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    color: black; /* Adicionado para garantir texto preto */
+}
+
+th {
+    background-color: #2E7D32;
+    color: white; /* Mantém o cabeçalho em branco */
+}
+
+tr:hover {
+    background-color: #f5f5f5;
+}
+
+.imagem-receita {
+    max-width: 150px;
+    max-height: 150px;
+    border-radius: 4px;
+    border: 2px solid #FFA726;
+}
+
+.sem-imagem {
+    color: black; /* Alterado de #666 para black */
+    font-style: italic;
+}
+
+.acoes {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.btn-editar, .btn-excluir, .btn-adicionar, .btn-voltar {
+    padding: 8px 12px;
+    border-radius: 4px;
+    text-decoration: none;
+    text-align: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white; /* Mantém texto dos botões em branco */
+}
+
+.btn-editar {
+    background-color: #FFA726;
+    border: none;
+}
+
+.btn-editar:hover {
+    background-color: #e69520;
+}
+
+.btn-excluir {
+    background-color: #dc3545;
+    border: none;
+}
+
+.btn-excluir:hover {
+    background-color: #c82333;
+}
+
+.btn-adicionar {
+    background-color: #28a745;
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.btn-adicionar:hover {
+    background-color: #218838;
+}
+
+.btn-voltar {
+    background-color: #6c757d;
+    display: inline-block;
+}
+
+.btn-voltar:hover {
+    background-color: #5a6268;
+}
+
+.sem-receitas {
+    text-align: center;
+    color: black; /* Alterado de #666 para black */
+    font-style: italic;
+    padding: 20px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    th, td {
+        padding: 8px 10px;
+        font-size: 14px;
+    }
+    
+    .acoes {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    
+    .btn-editar, .btn-excluir {
+        padding: 6px 10px;
+        font-size: 13px;
+    }
+    
+    .imagem-receita {
+        max-width: 100px;
+        max-height: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 15px;
+    }
+    
+    .actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn-adicionar, .btn-voltar {
+        width: 100%;
+        margin-right: 0;
+    }
+}

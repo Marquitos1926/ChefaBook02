@@ -1,0 +1,877 @@
+# Importações necessárias para os testes
+from flask.testing import FlaskClient  # Para criar cliente de teste Flask
+import pytest  # Framework de teste
+import sqlite3  # Para interação com banco de dados SQLite
+import io  # Para trabalhar com streams de bytes (útil para upload de arquivos)
+import bcrypt  # Para hashing de senhas
+import sys  # Para interação com o sistema
+import os  # Para interação com o sistema operacional
+from flask import url_for, get_flashed_messages  # Para trabalhar com URLs e mensagens flash
+from app import app, criar_tabelas, conectar_db, ADMIN_CREDENTIALS  # Importa a aplicação e funções do app
+
+# Configurações para os testes
+app.config['TESTING'] = True  # Ativa o modo de teste do Flask
+app.config['WTF_CSRF_ENABLED'] = False  # Desativa proteção CSRF para facilitar testes
+app.config['SERVER_NAME'] = 'localhost'  # Define nome do servidor para testes
+
+
+
+
+# Fixtures (configurações reutilizáveis entre testes)
+@pytest.fixture(scope="module")
+def client():
+    """
+    #---------------------------------------------------#
+    Fixture principal que configura o ambiente de teste:
+    #---------------------------------------------------#
+    1. Crio as tabelas no banco de dados
+    2. Fornece um cliente de teste para os testes
+    3. Limpo as tabelas após todos os testes
+    """
+    with app.app_context():
+        criar_tabelas()  # Cria a estrutura do banco de dados
+    with app.test_client() as client:  # Cria o cliente de teste Flask
+        yield client  # Entrega o cliente para os testes
+    with app.app_context():
+        limpar_tabelas()  # Limpa o banco após os testes
+
+def limpar_tabelas():
+    """Nessa parte removo os registros das tabelas de usuários e receitas"""
+    with conectar_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM usuarios")  # Limpa tabela de usuários
+        cursor.execute("DELETE FROM receitas")  # Limpa tabela de receitas
+        conn.commit()  # Confirma as alterações
+
+@pytest.fixture(autouse=True)
+def limpar_banco_entre_testes():
+    """
+    Fixture que garante o banco é limpo após CADA teste
+    Executa automaticamente antes e depois de cada teste
+    """
+    yield  # Aguarda a execução do teste
+    limpar_tabelas()  # Limpa o banco após o teste
+
+# Funções auxiliares para criar dados de teste
+def criar_usuario_teste(email='teste@email.com', senha='senha123', admin=False):
+    """
+        email: Email do usuário (padrão: 'teste@email.com')
+        senha: Senha do usuário (padrão: 'senha123')
+        admin: Se é administrador (padrão: False)
+    """
+    with conectar_db() as conn:
+        cursor = conn.cursor()
+        # Cria hash seguro da senha usando bcrypt
+        hashed = bcrypt.hashpw(senha.encode('utf-8'), bcrypt.gensalt())
+        # Insere o usuário no banco
+        cursor.execute('''
+            INSERT INTO usuarios (nome, email, telefone, senha, admin)
+            VALUES (?, ?, ?, ?, ?)
+        ''', ('Usuário Teste', email, '123456789', hashed, 1 if admin else 0))
+        conn.commit()
+        return cursor.lastrowid  # Retorna o ID do usuário criado
+
+def criar_receita_teste(user_id, titulo='Receita Teste'):
+    """
+    Cria uma receita de teste no banco de dados
+        user_id: ID do usuário que criou a receita
+        titulo: Título da receita (padrão: 'Receita Teste')
+    """
+    with conectar_db() as conn:
+        cursor = conn.cursor()
+        # Insere a receita com dados básicos
+        cursor.execute('''
+            INSERT INTO receitas (titulo, categoria, ingredientes, preparo, user_id)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (titulo, 'Categoria', 'Ingredientes', 'Preparo', user_id))
+        conn.commit()
+        return cursor.lastrowid  # Retorna o ID da receita criada
+
+def login_usuario(client, email, senha):
+    """
+    Realiza login de um usuário nos testes
+        client: Cliente de teste Flask
+        email: Email do usuário
+        senha: Senha do usuário
+    """
+    return client.post('/login', data={
+        'email': email,
+        'senha': senha
+    }, follow_redirects=True)  # Segue redirecionamentos automaticamente
+
+def login_admin(client):
+    """
+    Realiza login como administrador nos testes
+        client: Cliente de teste Flask
+    """
+    return client.post('/login_admin', data={
+        'email': ADMIN_CREDENTIALS['email'],
+        'password': ADMIN_CREDENTIALS['password']
+    }, follow_redirects=True)
+
+
+#--------------------#
+# TESTES DOS USUÁRIOS
+#--------------------#
+
+class TestUsuario:
+    def test_cadastro_usuario_sucesso(self, client):
+        """Testa cadastro de usuário com dados válidos"""
+        response = client.post('/cadastrar_usuario', data={
+            'nome': 'Novo Usuário',
+            'email': 'novo@email.com',
+            'telefone': '987654321',
+            'senha': 'senha123',
+            'confirmar_senha': 'senha123'
+        }, follow_redirects=True)
+        # Verifica se foi redirecionado para a página de login
+        assert b'Login' in response.data
+        # Verifica se exibiu mensagem de sucesso
+        assert any('sucesso' in msg.lower() for msg in get_flashed_messages())
+
+    def test_cadastro_email_existente(self, client):
+        """Testa tentativa de cadastro com email já existente"""
+        # Primeiro cria um usuário com esse email
+        criar_usuario_teste()
+        
+        # Tenta cadastrar novamente com mesmo email
+        response = client.post('/cadastrar_usuario', data={
+            'nome': 'Outro Usuário',
+            'email': 'teste@email.com',  # Email já existente
+            'telefone': '987654321',
+            'senha': 'senha123',
+            'confirmar_senha': 'senha123'
+        }, follow_redirects=True)
+        # Verifica mensagem de erro
+        assert any('já está cadastrado' in msg for msg in get_flashed_messages())
+
+    def test_cadastro_senhas_diferentes(self, client):
+        """Testa cadastro com senhas diferentes"""
+        response = client.post('/cadastrar_usuario', data={
+            'nome': 'Usuário',
+            'email': 'teste@email.com',
+            'telefone': '123456789',
+            'senha': 'senha123',
+            'confirmar_senha': 'senha456'  # Senhas diferentes
+        }, follow_redirects=True)
+        # Verifica mensagem de erro
+        assert any('não conferem' in msg for msg in get_flashed_messages())
+
+    def test_cadastro_nome_vazio(self, client):
+        """Testa cadastro sem nome"""
+        response = client.post('/cadastrar_usuario', data={
+            'nome': '',  # Nome vazio
+            'email': 'teste@email.com',
+            'telefone': '123456789',
+            'senha': 'senha123',
+            'confirmar_senha': 'senha123'
+        }, follow_redirects=True)
+        # Verifica mensagem de erro no HTML
+        assert b'O nome \xc3\xa9 obrigat\xc3\xb3rio' in response.data
+
+    def test_cadastro_senha_curta(self, client):
+        """Testa cadastro com senha muito curta"""
+        response = client.post('/cadastrar_usuario', data={
+            'nome': 'Usuário',
+            'email': 'teste@email.com',
+            'telefone': '123456789',
+            'senha': 'abc',  # Senha com apenas 3 caracteres
+            'confirmar_senha': 'abc'
+        }, follow_redirects=True)
+        # Verifica mensagem de erro
+        assert b'pelo menos 6 caracteres' in response.data
+
+    def test_login_sucesso(self, client):
+        """Testa login com credenciais válidas"""
+        # Primeiro cria um usuário para testar o login
+        criar_usuario_teste()
+        
+        # Faz login
+        response = login_usuario(client, 'teste@email.com', 'senha123')
+        
+        # Verifica mensagem de sucesso
+        assert any('sucesso' in msg.lower() for msg in get_flashed_messages())
+        # Verifica se criou a sessão
+        with client.session_transaction() as session:
+            assert 'user_id' in session
+
+    def test_login_credenciais_invalidas(self, client):
+        """Testa login com senha incorreta"""
+        criar_usuario_teste()
+        # Tenta fazer login com senha errada
+        response = login_usuario(client, 'teste@email.com', 'senhaerrada')
+        # Verifica mensagem de erro
+        assert any('incorretos' in msg.lower() for msg in get_flashed_messages())
+
+    def test_login_usuario_inexistente(self, client):
+        """Testa login com usuário não cadastrado"""
+        # Tenta fazer login com email que não existe
+        response = login_usuario(client, 'naoexiste@email.com', 'senha123')
+        # Verifica mensagem de erro
+        assert any('incorretos' in msg.lower() for msg in get_flashed_messages())
+
+    def test_logout(self, client):
+        """Testa o logout do usuário"""
+        # Cria usuário e faz login
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        # Faz logout
+        response = client.get('/logout', follow_redirects=True)
+        
+        # Verifica mensagem de sucesso
+        assert any('saiu' in msg.lower() for msg in get_flashed_messages())
+        # Verifica se limpou a sessão
+        with client.session_transaction() as session:
+            assert 'user_id' not in session
+
+    def test_acesso_dashboard_sem_login(self, client):
+        """Testa acesso à área restrita sem estar logado"""
+        response = client.get('/dashboard', follow_redirects=True)
+        # Verifica se redirecionou para login
+        assert any('login' in msg.lower() for msg in get_flashed_messages())
+
+    def test_acesso_dashboard_com_login(self, client):
+        """Testa acesso ao dashboard com login válido"""
+        # Cria usuário e faz login
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        # Acessa dashboard
+        response = client.get('/dashboard')
+        # Verifica se a página carregou corretamente
+        assert response.status_code == 200
+        assert b'Dashboard' in response.data
+
+    def test_pagina_login(self, client):
+        """Testa se a página de login carrega corretamente"""
+        response = client.get('/login')
+        assert response.status_code == 200
+        assert b'Login' in response.data
+
+    def test_pagina_cadastro(self, client):
+        """Testa se a página de cadastro carrega corretamente"""
+        response = client.get('/cadastrar_usuario')
+        assert response.status_code == 200
+        assert b'Cadastrar Usu\xc3\xa1rio' in response.data
+
+    def test_sessao_apos_login(self, client):
+        """Testa os dados armazenados na sessão após login"""
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        # Verifica todos os dados da sessão
+        with client.session_transaction() as session:
+            assert 'user_id' in session  # ID do usuário
+            assert 'user_nome' in session  # Nome do usuário
+            assert session.get('user_admin') is False  # Não é admin
+
+    def test_cadastro_usuario_admin(self, client):
+        """Testa criação de usuário administrador"""
+        # Cria usuário com flag admin=True
+        user_id = criar_usuario_teste(admin=True)
+        
+        # Verifica no banco de dados
+        with conectar_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT admin FROM usuarios WHERE id = ?", (user_id,))
+            assert cursor.fetchone()[0] == 1  # Deve ser admin (1)
+
+    def test_cadastro_usuario_nao_admin(self, client):
+        """Testa criação de usuário normal (não admin)"""
+        # Cria usuário normal
+        user_id = criar_usuario_teste()
+        
+        # Verifica no banco
+        with conectar_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT admin FROM usuarios WHERE id = ?", (user_id,))
+            assert cursor.fetchone()[0] == 0  # Não deve ser admin (0)
+
+    def test_criptografia_senha(self, client):
+        """Testa se a senha está sendo criptografada corretamente"""
+        senha = 'senha123'
+        # Cria usuário com senha conhecida
+        user_id = criar_usuario_teste(senha=senha)
+        
+        # Obtém o hash armazenado
+        with conectar_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT senha FROM usuarios WHERE id = ?", (user_id,))
+            hashed = cursor.fetchone()[0]
+        
+        # Verifica se o hash corresponde à senha original
+        assert bcrypt.checkpw(senha.encode('utf-8'), 
+               hashed if isinstance(hashed, bytes) else hashed.encode('utf-8'))
+
+    def test_telefone_opcional(self, client):
+        """Testa se o telefone é opcional no cadastro"""
+        response = client.post('/cadastrar_usuario', data={
+            'nome': 'Usuário Sem Telefone',
+            'email': 'semtelefone@email.com',
+            'telefone': '',  # Telefone vazio
+            'senha': 'senha123',
+            'confirmar_senha': 'senha123'
+        }, follow_redirects=True)
+        # Verifica se o cadastro foi bem sucedido
+        assert any('sucesso' in msg.lower() for msg in get_flashed_messages())
+
+
+#-------------------#
+# TESTES DE RECEITAS 
+#-------------------#
+
+class TestReceitas:
+    def test_cadastro_receita_sucesso(self, client):
+        """Testa cadastro completo de receita com imagem"""
+        # Prepara usuário e login
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        # Dados da receita com imagem simulada
+        data = {
+            'titulo': 'Bolo de Chocolate',
+            'categoria': 'Sobremesa',
+            'ingredientes': 'Farinha, açúcar, ovos, chocolate',
+            'preparo': 'Misture tudo e asse por 40 minutos',
+            'imagem': (io.BytesIO(b'teste'), 'teste.jpg')  # Imagem fake
+        }
+        
+        # Envia requisição com multipart/form-data
+        response = client.post('/cadastrar_receita', data=data, 
+                             content_type='multipart/form-data',
+                             follow_redirects=True)
+        
+        # Verifica mensagem de sucesso
+        assert any('sucesso' in msg.lower() for msg in get_flashed_messages())
+
+    def test_cadastro_receita_sem_imagem(self, client):
+        """Testa cadastro de receita sem imagem"""
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        # Dados sem imagem
+        response = client.post('/cadastrar_receita', data={
+            'titulo': 'Bolo Sem Imagem',
+            'categoria': 'Sobremesa',
+            'ingredientes': 'Ingredientes',
+            'preparo': 'Modo de preparo'
+        }, follow_redirects=True)
+        
+        # Verifica se foi bem sucedido mesmo sem imagem
+        assert any('sucesso' in msg.lower() for msg in get_flashed_messages())
+
+    def test_visualizar_receitas_vazias(self, client):
+        """Testa visualização quando não há receitas cadastradas"""
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        response = client.get('/visualizar_receitas')
+        # Verifica mensagem de lista vazia
+        assert b'Nenhuma receita cadastrada' in response.data
+
+    def test_visualizar_receitas_com_registros(self, client):
+        """Testa listagem de receitas existentes"""
+        # Cria usuário e 2 receitas
+        user_id = criar_usuario_teste()
+        criar_receita_teste(user_id, 'Receita 1')
+        criar_receita_teste(user_id, 'Receita 2')
+        
+        login_usuario(client, 'teste@email.com', 'senha123')
+        response = client.get('/visualizar_receitas')
+        
+        # Verifica se ambas receitas aparecem na listagem
+        assert b'Receita 1' in response.data
+        assert b'Receita 2' in response.data
+
+    def test_edicao_receita_sucesso(self, client):
+        """Testa edição de receita com dados válidos"""
+        user_id = criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        # Cria receita para editar
+        receita_id = criar_receita_teste(user_id)
+        
+        # Dados atualizados
+        response = client.post(f'/editar_receita/{receita_id}', data={
+            'titulo': 'Receita Atualizada',
+            'categoria': 'Sobremesa',
+            'ingredientes': 'Novos ingredientes',
+            'preparo': 'Novo modo de preparo'
+        }, follow_redirects=True)
+        
+        # Verifica mensagem de sucesso
+        assert any('sucesso' in msg.lower() for msg in get_flashed_messages())
+
+    def test_edicao_receita_inexistente(self, client):
+        """Testa tentativa de edição de receita que não existe"""
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        # Tenta editar receita com ID inválido
+        response = client.post('/editar_receita/999', data={
+            'titulo': 'Receita',
+            'categoria': 'Sobremesa',
+            'ingredientes': 'Ingredientes',
+            'preparo': 'Modo de preparo'
+        }, follow_redirects=True)
+        
+        # Verifica mensagem de erro
+        assert any('não encontrada' in msg.lower() for msg in get_flashed_messages())
+
+    def test_edicao_receita_outro_usuario(self, client):
+        """Testa tentativa de editar receita de outro usuário"""
+        # Cria dois usuários
+        user1 = criar_usuario_teste()
+        user2 = criar_usuario_teste('outro@email.com', 'senha456')
+        # Cria receita pertencente ao user2
+        receita_id = criar_receita_teste(user2)
+        
+        # Login com user1 tenta editar receita do user2
+        login_usuario(client, 'teste@email.com', 'senha123')
+        response = client.post(f'/editar_receita/{receita_id}', data={
+            'titulo': 'Receita Alterada',
+            'categoria': 'Sobremesa',
+            'ingredientes': 'Ingredientes',
+            'preparo': 'Modo de preparo'
+        }, follow_redirects=True)
+        
+        # Verifica mensagem de permissão negada
+        assert any('permissão' in msg.lower() for msg in get_flashed_messages())
+
+    def test_exclusao_receita_sucesso(self, client):
+        """Testa exclusão de receita pelo dono"""
+        user_id = criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        # Cria receita para excluir
+        receita_id = criar_receita_teste(user_id)
+        
+        # Exclui a receita
+        response = client.post(f'/excluir_receita/{receita_id}', follow_redirects=True)
+        
+        # Verifica mensagem de sucesso
+        assert any('sucesso' in msg.lower() for msg in get_flashed_messages())
+
+    def test_exclusao_receita_inexistente(self, client):
+        """Testa tentativa de excluir receita que não existe"""
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        # Tenta excluir receita com ID inválido
+        response = client.post('/excluir_receita/999', follow_redirects=True)
+        
+        # Verifica mensagem de erro
+        assert any('não encontrada' in msg.lower() for msg in get_flashed_messages())
+
+    def test_exclusao_receita_outro_usuario(self, client):
+        """Testa tentativa de excluir receita de outro usuário"""
+        # Cria dois usuários
+        user1 = criar_usuario_teste()
+        user2 = criar_usuario_teste('outro@email.com', 'senha456')
+        # Cria receita pertencente ao user2
+        receita_id = criar_receita_teste(user2)
+        
+        # Login com user1 tenta excluir receita do user2
+        login_usuario(client, 'teste@email.com', 'senha123')
+        response = client.post(f'/excluir_receita/{receita_id}', follow_redirects=True)
+        
+        # Verifica mensagem de permissão negada
+        assert any('permissão' in msg.lower() for msg in get_flashed_messages())
+
+    def test_imagem_receita_existente(self, client):
+        """Testa acesso à imagem de uma receita"""
+        user_id = criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        # Cria receita com imagem
+        data = {
+            'titulo': 'Bolo',
+            'categoria': 'Sobremesa',
+            'ingredientes': 'Ingredientes',
+            'preparo': 'Modo de preparo',
+            'imagem': (io.BytesIO(b'teste'), 'teste.jpg')
+        }
+        client.post('/cadastrar_receita', data=data, 
+                   content_type='multipart/form-data')
+        
+        # Obtém ID da receita criada
+        with conectar_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM receitas WHERE titulo = 'Bolo'")
+            receita_id = cursor.fetchone()[0]
+        
+        # Acessa a imagem da receita
+        response = client.get(f'/imagem_receita/{receita_id}')
+        # Verifica status e tipo do conteúdo
+        assert response.status_code == 200
+        assert response.content_type == 'image/jpeg'
+
+    def test_pagina_cadastro_receita(self, client):
+        """Testa acesso à página de cadastro de receita"""
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        response = client.get('/cadastrar_receita')
+        # Verifica se a página carrega corretamente
+        assert response.status_code == 200
+        assert b'Cadastrar Receita' in response.data
+
+    def test_pagina_edicao_receita(self, client):
+        """Testa acesso à página de edição de receita"""
+        user_id = criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        # Cria receita para editar
+        receita_id = criar_receita_teste(user_id)
+        
+        response = client.get(f'/editar_receita/{receita_id}')
+        # Verifica se a página carrega corretamente
+        assert response.status_code == 200
+        assert b'Editar Receita' in response.data
+
+    def test_pagina_edicao_receita_inexistente(self, client):
+        """Testa acesso à edição de receita inexistente"""
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        response = client.get('/editar_receita/999', follow_redirects=True)
+        # Verifica mensagem de erro
+        assert any('não encontrada' in msg.lower() for msg in get_flashed_messages())
+
+    def test_pagina_edicao_receita_outro_usuario(self, client):
+        """Testa tentativa de editar receita de outro usuário"""
+        # Cria dois usuários
+        user1 = criar_usuario_teste()
+        user2 = criar_usuario_teste('outro@email.com', 'senha456')
+        # Cria receita pertencente ao user2
+        receita_id = criar_receita_teste(user2)
+        
+        # Login com user1 tenta acessar edição da receita do user2
+        login_usuario(client, 'teste@email.com', 'senha123')
+        response = client.get(f'/editar_receita/{receita_id}', follow_redirects=True)
+        
+        # Verifica mensagem de permissão negada
+        assert any('permissão' in msg.lower() for msg in get_flashed_messages())
+
+    def test_extensao_imagem_invalida(self, client):
+        """Testa upload de imagem com extensão não permitida"""
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        # Tenta enviar arquivo com extensão .txt
+        data = {
+            'titulo': 'Bolo',
+            'categoria': 'Sobremesa',
+            'ingredientes': 'Ingredientes',
+            'preparo': 'Modo de preparo',
+            'imagem': (io.BytesIO(b'teste'), 'teste.txt')  # Extensão inválida
+        }
+        response = client.post('/cadastrar_receita', data=data, 
+                             content_type='multipart/form-data',
+                             follow_redirects=True)
+        
+        # Verifica mensagem de erro
+        assert any('não permitido' in msg.lower() for msg in get_flashed_messages())
+
+    def test_edicao_receita_mantem_imagem(self, client):
+        """Testa se a edição mantém a imagem original quando não é enviada nova"""
+        user_id = criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        # Cria receita com imagem
+        data = {
+            'titulo': 'Bolo',
+            'categoria': 'Sobremesa',
+            'ingredientes': 'Ingredientes',
+            'preparo': 'Modo de preparo',
+            'imagem': (io.BytesIO(b'imagem_original'), 'original.jpg')
+        }
+        client.post('/cadastrar_receita', data=data, 
+                   content_type='multipart/form-data')
+        
+        # Obtém ID da receita
+        with conectar_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM receitas WHERE titulo = 'Bolo'")
+            receita_id = cursor.fetchone()[0]
+        
+        # Edita sem enviar nova imagem
+        response = client.post(f'/editar_receita/{receita_id}', data={
+            'titulo': 'Bolo Atualizado',
+            'categoria': 'Sobremesa',
+            'ingredientes': 'Ingredientes',
+            'preparo': 'Modo de preparo'
+        }, follow_redirects=True)
+        
+        # Verifica no banco se a imagem original foi mantida
+        with conectar_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT imagem FROM receitas WHERE id = ?", (receita_id,))
+            assert cursor.fetchone()[0] == b'imagem_original'
+
+#----------------#
+# TESTES DE ADMIN 
+#----------------#
+
+class TestAdmin:
+    def test_login_admin_sucesso(self, client):
+        """Testa login do administrador com credenciais válidas"""
+        response = login_admin(client)
+        # Verifica mensagem de sucesso
+        assert any('sucesso' in msg.lower() for msg in get_flashed_messages())
+        # Verifica sessão
+        with client.session_transaction() as session:
+            assert session['user_admin'] is True  # Flag de admin ativa
+
+    def test_login_admin_credenciais_invalidas(self, client):
+        """Testa login do admin com credenciais inválidas"""
+        response = client.post('/login_admin', data={
+            'email': 'admin@email.com',
+            'password': 'senhaerrada'  # Senha incorreta
+        }, follow_redirects=True)
+        # Verifica mensagem de erro
+        assert any('inválidas' in msg.lower() for msg in get_flashed_messages())
+
+    def test_painel_admin_acesso_usuario_normal(self, client):
+        """Testa tentativa de acesso ao painel admin com usuário normal"""
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        response = client.get('/painel_admin', follow_redirects=True)
+        # Verifica mensagem de acesso restrito
+        assert any('restrito' in msg.lower() for msg in get_flashed_messages())
+
+    def test_listagem_usuarios_painel_admin(self, client):
+        """Testa listagem de usuários no painel administrativo"""
+        # Cria dois usuários
+        criar_usuario_teste('user1@email.com')
+        criar_usuario_teste('user2@email.com')
+        
+        login_admin(client)
+        response = client.get('/painel_admin')
+        # Verifica se ambos usuários aparecem na listagem
+        assert b'user1@email.com' in response.data
+        assert b'user2@email.com' in response.data
+
+    def test_listagem_receitas_painel_admin(self, client):
+        """Testa listagem de receitas no painel administrativo"""
+        user_id = criar_usuario_teste()
+        # Cria duas receitas
+        criar_receita_teste(user_id, 'Receita 1')
+        criar_receita_teste(user_id, 'Receita 2')
+        
+        login_admin(client)
+        response = client.get('/painel_admin')
+        # Verifica se ambas receitas aparecem
+        assert b'Receita 1' in response.data
+        assert b'Receita 2' in response.data
+
+    def test_exclusao_usuario_admin(self, client):
+        """Testa exclusão de usuário pelo administrador"""
+        login_admin(client)
+        # Cria usuário para excluir
+        user_id = criar_usuario_teste()
+        
+        response = client.post(f'/excluir_usuario/{user_id}', follow_redirects=True)
+        # Verifica mensagem de sucesso
+        assert any('sucesso' in msg.lower() for msg in get_flashed_messages())
+        # Verifica se o usuário foi removido do banco
+        with conectar_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM usuarios WHERE id = ?", (user_id,))
+            assert cursor.fetchone() is None
+
+    def test_exclusao_receita_admin(self, client):
+        """Testa exclusão de receita pelo administrador"""
+        user_id = criar_usuario_teste()
+        # Cria receita para excluir
+        receita_id = criar_receita_teste(user_id)
+        
+        login_admin(client)
+        response = client.post(f'/excluir_receita_admin/{receita_id}', follow_redirects=True)
+        # Verifica mensagem de sucesso
+        assert any('sucesso' in msg.lower() for msg in get_flashed_messages())
+        # Verifica se a receita foi removida do banco
+        with conectar_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM receitas WHERE id = ?", (receita_id,))
+            assert cursor.fetchone() is None
+
+    def test_sessao_admin(self, client):
+        """Testa configuração da sessão para administrador"""
+        login_admin(client)
+        # Verifica todos os dados da sessão
+        with client.session_transaction() as session:
+            assert session['user_id'] == 0  # ID especial para admin
+            assert session['user_admin'] is True  # Flag de admin
+            assert session['user_nome'] == 'Administrador'  # Nome padrão
+
+    def test_admin_pode_excluir_receita_qualquer(self, client):
+        """Testa se admin pode excluir receita de qualquer usuário"""
+        user_id = criar_usuario_teste()
+        # Cria receita pertencente a um usuário normal
+        receita_id = criar_receita_teste(user_id)
+        
+        login_admin(client)
+        response = client.post(f'/excluir_receita_admin/{receita_id}', follow_redirects=True)
+        # Verifica se a exclusão foi permitida
+        assert any('sucesso' in msg.lower() for msg in get_flashed_messages())
+
+
+
+#----------------------------#
+# TESTES DE ERROS E SEGURANÇA
+#----------------------------#
+
+class TestErrosSeguranca:
+    def test_pagina_nao_encontrada(self, client):
+        """Testa resposta para página não encontrada (404)"""
+        response = client.get('/pagina_inexistente')
+        # Verifica status code e mensagem
+        assert response.status_code == 404
+        assert b'P\xc3\xa1gina n\xc3\xa3o encontrada' in response.data
+
+    def test_sql_injection_login(self, client):
+        """Testa proteção contra SQL injection no formulário de login"""
+        response = client.post('/login', data={
+            'email': "' OR '1'='1",  # Tentativa clássica de SQL injection
+            'senha': "' OR '1'='1"
+        }, follow_redirects=True)
+        # Verifica se o login falhou (proteção funcionando)
+        assert any('incorretos' in msg.lower() for msg in get_flashed_messages())
+
+    
+    def test_sql_injection_cadastro(self, client):
+        """Testa proteção contra SQL injection no cadastro"""
+        response = client.post('/cadastrar_usuario', data={
+            'nome': "Teste'; DROP TABLE usuarios;--",
+            'email': 'teste@email.com',
+            'telefone': '123456789',
+            'senha': 'senha123',
+            'confirmar_senha': 'senha123'
+        }, follow_redirects=True)
+        # Verifica se o sistema continua funcionando
+        assert b'Login' in response.data
+        # Verifica se a tabela ainda existe
+        with conectar_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='usuarios'")
+            assert cursor.fetchone() is not None
+
+    def test_xss_cadscript(self, client):
+        """Testa proteção contra XSS em campos de texto"""
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        # Tentativa de XSS no título da receita
+        response = client.post('/cadastrar_receita', data={
+            'titulo': '<script>alert("XSS")</script>',
+            'categoria': 'Sobremesa',
+            'ingredientes': 'Ingredientes',
+            'preparo': 'Modo de preparo'
+        }, follow_redirects=True)
+        # Verifica se o script foi sanitizado
+        assert b'&lt;script&gt;alert("XSS")&lt;/script&gt;' in response.data or \
+               b'<script>' not in response.data
+
+
+
+#---------------------------#
+#TESTE DE ERROS DE SEGURANÇA
+#---------------------------#
+
+    def test_senha_hash_unico(self, client):
+        """Testa se hashes de senha são únicos mesmo para senhas iguais"""
+        senha = 'senha123'
+        user1_id = criar_usuario_teste('user1@email.com', senha)
+        user2_id = criar_usuario_teste('user2@email.com', senha)
+        
+        with conectar_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT senha FROM usuarios WHERE id = ?", (user1_id,))
+            hash1 = cursor.fetchone()[0]
+            cursor.execute("SELECT senha FROM usuarios WHERE id = ?", (user2_id,))
+            hash2 = cursor.fetchone()[0]
+            
+        assert hash1 != hash2  # Os hashes devem ser diferentes
+
+    def test_logout_invalida_sessao(self, client):
+        """Testa se o logout invalida completamente a sessão"""
+        criar_usuario_teste()
+        login_usuario(client, 'teste@email.com', 'senha123')
+        
+        with client.session_transaction() as session:
+            assert 'user_id' in session
+            
+        client.get('/logout', follow_redirects=True)
+        
+        with client.session_transaction() as session:
+            assert 'user_id' not in session
+            assert 'user_nome' not in session
+            assert 'user_admin' not in session
+
+
+#----------------------------#
+# TESTE SIMPLES DE INTEGRAÇÃO
+#----------------------------#
+
+class TestIntegracao:
+    def test_fluxo_completo_admin(self, client):
+        """Testa o fluxo completo de login admin, gerenciamento e logout"""
+        # Login admin
+        response = login_admin(client)
+        assert any('sucesso' in msg.lower() for msg in get_flashed_messages())
+        
+        # Cria um usuário normal para teste
+        user_id = criar_usuario_teste('user_admin_test@email.com')
+        
+        # Painel admin
+        response = client.get('/painel_admin')
+        assert b'user_admin_test@email.com' in response.data
+        
+        # Exclui o usuário
+        response = client.post(f'/excluir_usuario/{user_id}', follow_redirects=True)
+        assert any('sucesso' in msg.lower() for msg in get_flashed_messages())
+        
+        # Logout
+        response = client.get('/logout', follow_redirects=True)
+        assert any('saiu' in msg.lower() for msg in get_flashed_messages())
+
+
+
+#---------------------------------------#
+#Teste que dara errado(propositadamente)
+#---------------------------------------#
+class TestErro:
+    #Os testes a seguir tem como propósito darem erro.
+
+    #codido funcionando
+    def test_cadastro_receita_Erro(self, client):
+        """TESTE QUE FALHA: Verifica cadastro de receita sem dados obrigatórios"""
+        criar_usuario_teste()  # Certifique-se de que o usuário é criado com senha 'senha123'
+        login_usuario(client, 'teste@email.com', 'senha123')  # Senha deve bater com a do usuário de teste
+
+        # Tenta cadastrar receita sem título (campo obrigatório)
+        response = client.post('/cadastrar_receita', data={
+            'titulo': 'Pudin', 
+            'categoria': 'Sobremesa',
+            'ingredientes': 'Ingredientes',
+            'preparo': 'Modo de preparo'
+        }, follow_redirects=True)
+
+        # Verifica se há mensagens de erro (não de sucesso)
+        messages = get_flashed_messages()
+        assert any('obrigatório' in msg.lower() or 'erro' in msg.lower() for msg in messages)
+
+        #Nesse assert verificase se há mensagens de erro(o que não existe)
+        #Esse é o assert da forma correta e funcionando      -assert any('sucesso' in msg.lower() for msg in get_flashed_messages())-
+
+
+    
+        
+def run_tests():
+    """Está função serve para executar os testes automaticamente"""
+    return pytest.main(["-v", "--capture=no"])
+
+if __name__ == "__main__":
+    sys.exit(run_tests())
+
+
+

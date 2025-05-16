@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='uploads/styles.css') }}">
+</head>
+<body>
+
+<!-- Navbar estilizado -->
+<nav class="navbar">
+    <a href="{{ url_for('dashboard') }}">Home</a>
+    <a href="{{ url_for('cadastrar_receita') }}">Nova Receita</a>
+    <a href="{{ url_for('visualizar_receitas') }}">Ver Receitas</a>
+    <a href="{{ url_for('home') }}">Voltar ao Início</a>
+    <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
+</nav>
+
+<div class="container">
+    <h2>Painel do Usuário</h2>
+    <p>Gerencie suas receitas com facilidade.</p>
+</div>
+
+</body>
+</html>

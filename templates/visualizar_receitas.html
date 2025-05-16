@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minhas Receitas</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='uploads/styles.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{{ url_for('dashboard') }}">Home</a>
+        <a href="{{ url_for('cadastrar_receita') }}">Nova Receita</a>
+        <a href="{{ url_for('visualizar_receitas') }}">Ver Receitas</a>
+        <a href="{{ url_for('home') }}">Voltar ao Início</a>
+        <a href="{{ url_for('logout') }}" class="logout-link">Sair</a>
+    </nav>
+
+    <div class="container">
+        <h2>Minhas Receitas</h2>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for category, message in messages %}
+                        <div class="flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        {% if receitas %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Imagem</th>
+                        <th>Título</th>
+                        <th>Categoria</th>
+                        <th>Ingredientes</th>
+                        <th>Modo de Preparo</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for receita in receitas %}
+                    <tr>
+                        <td>
+                            {% if receita.tem_imagem %}
+                                <img src="{{ url_for('imagem_receita', receita_id=receita.id) }}" 
+                                     class="imagem-receita" 
+                                     alt="{{ receita.titulo }}">
+                            {% else %}
+                                <span class="sem-imagem">Sem imagem</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ receita.titulo }}</td>
+                        <td>{{ receita.categoria }}</td>
+                        <td>{{ receita.ingredientes | replace('\n', '<br>') | safe }}</td>
+                        <td>{{ receita.preparo | replace('\n', '<br>') | safe }}</td>
+                        <td class="acoes">
+                            <a href="{{ url_for('editar_receita', receita_id=receita.id) }}" class="btn-editar">Editar</a>
+                            <form action="{{ url_for('excluir_receita', receita_id=receita.id) }}" method="POST">
+                                <button type="submit" class="btn-excluir" onclick="return confirm('Tem certeza que deseja excluir esta receita?')">Excluir</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="sem-receitas">Nenhuma receita cadastrada ainda.</p>
+        {% endif %}
+        
+        <div class="actions">
+            <a href="{{ url_for('cadastrar_receita') }}" class="btn-adicionar">Adicionar Nova Receita</a>
+            <a href="{{ url_for('dashboard') }}" class="btn-voltar">Voltar ao Dashboard</a>
+        </div>
+    </div>
+</body>
+</html>

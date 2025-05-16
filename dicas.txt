@@ -1,0 +1,62 @@
+OLÁ
+Todo o passo a passo par abrir o app.py corretamente com o flask:
+1-Abrir a pasta corretamente no VScode.
+2-Baixar python(já tem a extensão no VScode) ou (baixar no da Microsoft).
+3-Baixar a extensão SQLite(já tem a extensão no VScode).
+4-Agora vc terá que baixar o flask com o código "pip install flask" no terminal.
+5-Agora terá que baixar isso no terminal "pip install bcrypt".
+6-Vc terá que baixar o SQLite no site "https://www.sqlite.org/download.html".
+6.1-se tiver duvidas esse vídeo ajuda"https://youtu.be/AaklnZsL1GQ?si=RV1MuR3dtC0rYNgP"
+6.2-não se esquecer de copiar o caminho e colocar no "editar as variáveis sde ambiente do sistema".
+7-Ok agora está tudo pronto.
+
+
+
+#Aqui é o login do usuario administrador
+Usuario ADM
+nome:ADM
+e-mail:admin@email.com
+senha:senha123
+
+
+
+1-Quando for testar algo usar esse comando "python -m pytest test_app.py".
+2-Fiz alguns testes unitarios que foram be sucedidos.
+3-Uma dica ou aviso bem obivio é que se você executar o test_app vai apagar oas tabelas de unitarios e receitas.
+4-Quando for fazer o sistema rodar umar o comando "python app.py" e acessar o link "http://127.0.0.1:5000" no seu navegador.
+5-Como fazer um teste unitario tentar isso pytest test_app.py::TestReceitas::test_edicao_receita -v --capture=no
+
+
+Passo a passo passa acessar o banco de dados pelo terminal e suas tableas.
+#Aqui foi uns teste que eu estava fazendo para acessar o banco de dados
+PS C:\Users\Julio\OneDrive\Documentos\Trabalho yanes01> sqlite3 chefabook.db
+>>
+SQLite version 3.49.1 2025-02-18 13:38:58
+Enter ".help" for usage hints.
+sqlite> .tables
+receitas  usuarios
+sqlite> select * from usuarios;
+8|teste|teste@gmail.com|7599999999|$2b$12$0r5CLZUP385DfqMB7w3w4OvcjyxFg4KEaA66FgIt0jxpQw6O/bqs.|0
+9|teste|marta@gmail.com|7599999999|$2b$12$lsv6oGXzAWpxZnV/1c14gO5mWx0p1qPrf.MAZ4bfLNiBj6ikSXq72|0
+10|teste01|teste01@gmail.com|7599999999|$2b$12$bWChc/U25fHRvoAdMqsK6uy6ZAt1zwVF1iDvwFvvqYnZJSL2gVKum|0
+sqlite>
+
+
+
+
+
+
+
+
+
+
+
+
+
+Resumo dos Comandos Úteis
+Comando	O que Faz
+python -m pytest --version	Verifica a versão do pytest
+python -m pytest -v teste_integração_app.py::TestUsuario	Testa uma classe específica
+python -m pytest -k "login"	Testa todos os métodos com "login" no nome
+python -m pytest --collect-only	Lista todos os testes disponíveis (sem executar)python -m pytest test_app.py::TestAdmin -v
+
